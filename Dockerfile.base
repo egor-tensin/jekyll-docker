@@ -11,20 +11,20 @@ RUN apt update -yq && \
         sudo
 
 # Creating regular user 'developer':
-ARG USER=developer
-RUN addgroup "$USER" && \
-    adduser --disabled-password --gecos "" --ingroup "$USER" --home "/home/$USER" "$USER" && \
-    addgroup "$USER" sudo && \
+ARG JEKYLL_USER=developer
+ENV JEKYLL_USER="$JEKYLL_USER"
+RUN addgroup "$JEKYLL_USER" && \
+    adduser --disabled-password --gecos "" --ingroup "$JEKYLL_USER" --home "/home/$JEKYLL_USER" "$JEKYLL_USER" && \
+    addgroup "$JEKYLL_USER" sudo && \
     echo -e '%sudo ALL=(ALL) NOPASSWD:ALL\nDefaults env_keep += "HOME"' >> /etc/sudoers
 
-USER "$USER"
-ENV src_dir="/home/$USER/src"
-RUN mkdir -p -- "$src_dir/docker"
-WORKDIR "$src_dir/docker"
+USER "$JEKYLL_USER"
+ENV PATH="/home/$JEKYLL_USER/.local/bin:$PATH"
 
-ENV PATH="/home/$USER/.local/bin:$PATH"
+ENV MAKEFILE_DIR="/utils"
+COPY ["Makefile", "$MAKEFILE_DIR/"]
+WORKDIR "$MAKEFILE_DIR"
 
-COPY ["docker/Makefile", "./"]
 RUN sudo make ruby-install && \
     sudo make ruby-install/clean && \
     make ruby && \
@@ -32,10 +32,3 @@ RUN sudo make ruby-install && \
     sudo make chruby/profile.d && \
     sudo make chruby/clean && \
     make bundler
-
-COPY ["Gemfile", "Gemfile.lock", "../"]
-RUN make dependencies
-
-COPY [".", "../"]
-RUN sudo chown -R "$USER:$USER" ../
-CMD make jekyll/serve

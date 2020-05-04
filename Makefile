@@ -6,7 +6,7 @@ SHELL := bash
 
 makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
-PROJECT_DIR := $(abspath $(dir $(makefile_dir))/..)
+PROJECT_DIR ?= $(abspath $(dir $(makefile_dir))/..)
 RUBY_INSTALL_VERSION ?= 0.7.0
 RUBY_VERSION ?= 2.6.5
 CHRUBY_VERSION ?= 0.3.9
@@ -22,6 +22,7 @@ auto_sh := $(PREFIX)/share/chruby/auto.sh
 ruby_install_url := https://github.com/postmodern/ruby-install/archive/v$(RUBY_INSTALL_VERSION).tar.gz
 ruby_install_archive := $(makefile_dir)/ruby-install-$(RUBY_INSTALL_VERSION).tar.gz
 ruby_install_dir := $(makefile_dir)/ruby-install-$(RUBY_INSTALL_VERSION)
+
 .PHONY: chruby
 chruby:
 	wget -O '$(chruby_archive)' '$(chruby_url)'
@@ -70,7 +71,10 @@ ruby-install/clean:
 ruby:
 	ruby-install -j2 --cleanup ruby '$(RUBY_VERSION)'
 
-chruby := cd -- '$(PROJECT_DIR)' && . '$(chruby_sh)' && chruby 'ruby-$(RUBY_VERSION)'
+chruby := . '$(chruby_sh)' && chruby 'ruby-$(RUBY_VERSION)'
+project_chruby := cd -- '$(PROJECT_DIR)' && $(chruby)
+bundle := $(project_chruby) && bundle
+jekyll := $(bundle) exec jekyll
 
 .PHONY: bundler
 bundler:
@@ -78,12 +82,10 @@ bundler:
 
 .PHONY: dependencies
 dependencies:
-	$(chruby) && bundle install --jobs=2 --retry=3
+	$(bundle) install --jobs=2 --retry=3
 
 .PHONY: deps
 deps: dependencies
-
-jekyll := $(chruby) && bundle exec jekyll
 
 .PHONY: jekyll/build
 jekyll/build:
@@ -93,7 +95,9 @@ jekyll/build:
 jekyll/serve:
 	$(jekyll) serve --host 0.0.0.0 --config _config.yml,_config_dev.yml
 
-docker_compose := cd -- '$(makefile_dir)' && docker-compose
+# Not an absolute path, cause you know, Windows (more specifically, Cygwin +
+# native Windows docker-compose).
+docker_compose := cd -- '$(makefile_dir)' && docker-compose --env-file ./.env
 
 .PHONY: docker/build
 docker/build:
@@ -101,7 +105,7 @@ docker/build:
 
 .PHONY: docker/up
 docker/up:
-	$(docker_compose) up -d
+	$(docker_compose) up -d project
 
 .PHONY: docker/down
 docker/down:
@@ -109,7 +113,7 @@ docker/down:
 
 .PHONY: docker/shell
 docker/shell:
-	$(docker_compose) exec serve bash --login
+	$(docker_compose) exec project bash --login
 
 .PHONY: docker/clean
 docker/clean:

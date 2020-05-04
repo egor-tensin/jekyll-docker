@@ -1,0 +1,10 @@
+FROM jekyll_base
+
+ENV PROJECT_DIR="/project"
+RUN sudo mkdir -p -- "$PROJECT_DIR" && \
+    sudo chown -- "$JEKYLL_USER:$JEKYLL_USER" "$PROJECT_DIR"
+COPY --chown="$JEKYLL_USER:$JEKYLL_USER" ["Gemfile", "Gemfile.lock", "$PROJECT_DIR/"]
+RUN make dependencies
+
+COPY --chown="$JEKYLL_USER:$JEKYLL_USER" [".", "$PROJECT_DIR/"]
+CMD make jekyll/serve
