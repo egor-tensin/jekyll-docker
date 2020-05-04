@@ -5,7 +5,7 @@ SHELL := bash
 .SUFFIXES:
 
 makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-project_dir := $(dir $(makefile_dir))/..
+project_dir := $(abspath $(dir $(makefile_dir))/..)
 
 PREFIX ?= $(HOME)/.local
 
