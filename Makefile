@@ -6,11 +6,16 @@ SHELL := bash
 
 makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
+# Jekyll project is in the parent directory by default.
 PROJECT_DIR ?= $(abspath $(dir $(makefile_dir))/..)
 RUBY_INSTALL_VERSION ?= 0.7.0
 RUBY_VERSION ?= 2.6.5
 CHRUBY_VERSION ?= 0.3.9
 PREFIX ?= $(HOME)/.local
+
+ruby_install_url := https://github.com/postmodern/ruby-install/archive/v$(RUBY_INSTALL_VERSION).tar.gz
+ruby_install_archive := $(makefile_dir)/ruby-install-$(RUBY_INSTALL_VERSION).tar.gz
+ruby_install_dir := $(makefile_dir)/ruby-install-$(RUBY_INSTALL_VERSION)
 
 chruby_url := https://github.com/postmodern/chruby/archive/v$(CHRUBY_VERSION).tar.gz
 chruby_archive := $(makefile_dir)/chruby-$(CHRUBY_VERSION).tar.gz
@@ -19,9 +24,23 @@ chruby_dir := $(makefile_dir)/chruby-$(CHRUBY_VERSION)
 chruby_sh := $(PREFIX)/share/chruby/chruby.sh
 auto_sh := $(PREFIX)/share/chruby/auto.sh
 
-ruby_install_url := https://github.com/postmodern/ruby-install/archive/v$(RUBY_INSTALL_VERSION).tar.gz
-ruby_install_archive := $(makefile_dir)/ruby-install-$(RUBY_INSTALL_VERSION).tar.gz
-ruby_install_dir := $(makefile_dir)/ruby-install-$(RUBY_INSTALL_VERSION)
+.PHONY: ruby-install
+ruby-install:
+	wget -O '$(ruby_install_archive)' '$(ruby_install_url)'
+	tar -xzvf '$(ruby_install_archive)' -C '$(makefile_dir)'
+	cd -- '$(ruby_install_dir)' && make install 'PREFIX=$(PREFIX)'
+
+.PHONY: ruby-install/uninstall
+ruby-install/uninstall:
+	cd -- '$(ruby_install_dir)' && make uninstall 'PREFIX=$(PREFIX)'
+
+.PHONY: ruby-install/clean
+ruby-install/clean:
+	rm -rf -- '$(ruby_install_archive)' '$(ruby_install_dir)'
+
+.PHONY: ruby
+ruby:
+	ruby-install -j2 --cleanup ruby '$(RUBY_VERSION)'
 
 .PHONY: chruby
 chruby:
@@ -52,24 +71,6 @@ chruby/profile.d:
 .PHONY: chruby/profile.d/clean
 chruby/profile.d/clean:
 	rm -f -- /etc/profile.d/chruby.sh
-
-.PHONY: ruby-install
-ruby-install:
-	wget -O '$(ruby_install_archive)' '$(ruby_install_url)'
-	tar -xzvf '$(ruby_install_archive)' -C '$(makefile_dir)'
-	cd -- '$(ruby_install_dir)' && make install 'PREFIX=$(PREFIX)'
-
-.PHONY: ruby-install/uninstall
-ruby-install/uninstall:
-	cd -- '$(ruby_install_dir)' && make uninstall 'PREFIX=$(PREFIX)'
-
-.PHONY: ruby-install/clean
-ruby-install/clean:
-	rm -rf -- '$(ruby_install_archive)' '$(ruby_install_dir)'
-
-.PHONY: ruby
-ruby:
-	ruby-install -j2 --cleanup ruby '$(RUBY_VERSION)'
 
 chruby := . '$(chruby_sh)' && chruby 'ruby-$(RUBY_VERSION)'
 project_chruby := cd -- '$(PROJECT_DIR)' && $(chruby)

@@ -1,20 +1,38 @@
+# I had conflicting requirements:
+# * make Makefile available during the build to avoid code duplication,
+# * make out-of-tree builds possible (i.e. this directory, along with Makefile,
+# shouldn't be required to reside inside the project directory).
+#
+# So, I basically had two build contexts (PROJECT_DIR and this directory),
+# which is unsupported.
+# On the other hand, I only need the Makefile from this directory, so I could
+# hack it by passing the contents of the Makefile as a build argument.
+# I thought this was too much though, so I came up with making two images, one
+# containing the Makefile (and Ruby, etc.), and the other extending the base
+# one.
+# This has some nice properties (there's now a common base image for all Jekyll
+# projects), but some drawbacks as well.
 version: '3.2'
 services:
   base:
     build:
       context: .
-      dockerfile: "$PWD/Dockerfile.base"
+      dockerfile: Dockerfile.base
       args:
         JEKYLL_USER: developer
   project:
     build:
       context: "${PROJECT_DIR:-..}"
+      # Dockerfile outside of the build context.
+      # This is supposedly supported by Docker since 18.03, but I couldn't find
+      # a less hacky way to do it.
+      # Source: https://github.com/docker/compose/issues/4926.
       dockerfile: "$PWD/Dockerfile.project"
     depends_on:
+      # It actually doesn't depend on anything, but the base image needs to be
+      # built before this image.
       - base
     ports:
       - 4000:4000
     volumes:
-      - type: bind
-        source: "${PROJECT_DIR:-..}"
-        target: '/project'
+      - "${PROJECT_DIR:-..}:/project"
