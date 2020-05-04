@@ -5,25 +5,23 @@ SHELL := bash
 .SUFFIXES:
 
 makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-project_dir := $(abspath $(dir $(makefile_dir))/..)
 
+PROJECT_DIR := $(abspath $(dir $(makefile_dir))/..)
+RUBY_INSTALL_VERSION ?= 0.7.0
+RUBY_VERSION ?= 2.6.5
+CHRUBY_VERSION ?= 0.3.9
 PREFIX ?= $(HOME)/.local
 
-chruby_version ?= 0.3.9
-chruby_url := https://github.com/postmodern/chruby/archive/v$(chruby_version).tar.gz
-chruby_archive := $(makefile_dir)/chruby-$(chruby_version).tar.gz
-chruby_dir := $(makefile_dir)/chruby-$(chruby_version)
+chruby_url := https://github.com/postmodern/chruby/archive/v$(CHRUBY_VERSION).tar.gz
+chruby_archive := $(makefile_dir)/chruby-$(CHRUBY_VERSION).tar.gz
+chruby_dir := $(makefile_dir)/chruby-$(CHRUBY_VERSION)
 
 chruby_sh := $(PREFIX)/share/chruby/chruby.sh
 auto_sh := $(PREFIX)/share/chruby/auto.sh
 
-ruby_install_version ?= 0.7.0
-ruby_install_url := https://github.com/postmodern/ruby-install/archive/v$(ruby_install_version).tar.gz
-ruby_install_archive := $(makefile_dir)/ruby-install-$(ruby_install_version).tar.gz
-ruby_install_dir := $(makefile_dir)/ruby-install-$(ruby_install_version)
-
-ruby_version ?= 2.6.5
-
+ruby_install_url := https://github.com/postmodern/ruby-install/archive/v$(RUBY_INSTALL_VERSION).tar.gz
+ruby_install_archive := $(makefile_dir)/ruby-install-$(RUBY_INSTALL_VERSION).tar.gz
+ruby_install_dir := $(makefile_dir)/ruby-install-$(RUBY_INSTALL_VERSION)
 .PHONY: chruby
 chruby:
 	wget -O '$(chruby_archive)' '$(chruby_url)'
@@ -70,9 +68,9 @@ ruby-install/clean:
 
 .PHONY: ruby
 ruby:
-	ruby-install -j2 --cleanup ruby '$(ruby_version)'
+	ruby-install -j2 --cleanup ruby '$(RUBY_VERSION)'
 
-chruby := cd -- '$(project_dir)' && . '$(chruby_sh)' && chruby 'ruby-$(ruby_version)'
+chruby := cd -- '$(PROJECT_DIR)' && . '$(chruby_sh)' && chruby 'ruby-$(RUBY_VERSION)'
 
 .PHONY: bundler
 bundler:
