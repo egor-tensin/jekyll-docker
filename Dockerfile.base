@@ -8,7 +8,8 @@ RUN apt update -yq && \
     apt install -yq --no-install-recommends \
         build-essential \
         ca-certificates wget \
-        sudo
+        sudo \
+        nano vim
 
 # Creating regular user 'developer':
 ARG JEKYLL_USER=developer
