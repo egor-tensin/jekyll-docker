@@ -85,8 +85,15 @@ bundler:
 dependencies:
 	$(bundle) install --jobs=2 --retry=3
 
+.PHONY: dependencies/update
+dependencies/update:
+	$(bundle) update --jobs=2
+
 .PHONY: deps
 deps: dependencies
+
+.PHONY: deps/update
+deps/update: dependencies/update
 
 .PHONY: jekyll/build
 jekyll/build:
