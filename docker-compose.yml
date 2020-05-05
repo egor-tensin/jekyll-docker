@@ -12,7 +12,8 @@
 # one.
 # This has some nice properties (there's now a common base image for all Jekyll
 # projects), but some drawbacks as well.
-version: '3.2'
+
+version: '3'
 services:
   base:
     build:
