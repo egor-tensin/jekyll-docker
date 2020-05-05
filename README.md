@@ -56,7 +56,7 @@ Examples
 
        make docker/build PROJECT_DIR=../jekyll-project/
 
-   To bring everything down,
+   Bring everything down:
 
        make docker/down
     
@@ -74,3 +74,11 @@ install everything locally.
 This goal was achieved, but I also noticed that "out-of-tree" builds were
 actually possible, hence the introduction of the PROJECT_DIR parameter, and the
 slight crazyness with the two separate images.
+
+License
+-------
+
+Distributed under the MIT License.
+See [LICENSE.txt] for details.
+
+[LICENSE.txt]: LICENSE.txt
