@@ -22,13 +22,16 @@ USER "$JEKYLL_USER"
 ENV PATH="/home/$JEKYLL_USER/.local/bin:$PATH"
 
 ENV MAKEFILE_DIR="/utils"
-COPY ["Makefile", "$MAKEFILE_DIR/"]
+RUN sudo mkdir -p -- "$MAKEFILE_DIR" && \
+    sudo chown -- "$JEKYLL_USER:$JEKYLL_USER" "$MAKEFILE_DIR"
 WORKDIR "$MAKEFILE_DIR"
 
-RUN sudo make ruby-install && \
-    sudo make ruby-install/clean && \
+COPY --chown="$JEKYLL_USER:$JEKYLL_USER" ["Makefile", "./"]
+
+RUN make ruby-install && \
+    make ruby-install/clean && \
     make ruby && \
-    sudo make chruby && \
+    make chruby && \
     sudo make chruby/profile.d && \
-    sudo make chruby/clean && \
+    make chruby/clean && \
     make bundler
