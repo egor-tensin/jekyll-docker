@@ -44,18 +44,13 @@ jobs:
           make bundler
           make dependencies "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
       - name: _site doesn't exist
-        run: |
-          cd -- "$JEKYLL_PROJECT_NAME"
-          test ! -e '_site'
+        run: test ! -e "$JEKYLL_PROJECT_NAME/_site"
       - name: Build Jekyll project
-        run: |
-          cd src
-          make jekyll/build "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
+        run: make -f src/Makefile jekyll/build "PROJECT_DIR=$JEKYLL_PROJECT_NAME"
       - name: _site exists
         run: |
-          cd -- "$JEKYLL_PROJECT_NAME"
-          test -d '_site'
-          test -f '_site/index.html'
+          test -d "$JEKYLL_PROJECT_NAME/_site"
+          test -f "$JEKYLL_PROJECT_NAME/_site/index.html"
   docker_build:
     name: Docker build
     runs-on: ubuntu-18.04
@@ -74,9 +69,7 @@ jobs:
           repository: ${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}
           path: ${{ env.JEKYLL_PROJECT_NAME }}
       - name: Build Docker images
-        run: |
-          cd src
-          make docker/build "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
+        run: make -f src/Makefile docker/build "PROJECT_DIR=$JEKYLL_PROJECT_NAME"
       - name: _site doesn't exist
         run: test ! -e "$JEKYLL_PROJECT_NAME/_site"
       - name: Start containers
@@ -85,7 +78,7 @@ jobs:
           make docker/up "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
           sleep 3
           make docker/logs
-      - name: Check container UID
+      - name: Check Jekyll running as current user
         run: |
           pid="$( docker inspect -f '{{.State.Pid}}' jekyll_project_1 )"
           info="$( ps --no-headers -o uid:1,gid:1 -p "$pid" )"
@@ -94,7 +87,7 @@ jobs:
         run: |
           test -d "$JEKYLL_PROJECT_NAME/_site"
           test -f "$JEKYLL_PROJECT_NAME/_site/index.html"
-      - name: Check _site ownership
+      - name: Check _site owned by current user
         run: |
           test "$( id -u ) $( id -g )" = "$( stat -c '%u %g' "$JEKYLL_PROJECT_NAME/_site" )"
           test "$( id -u ) $( id -g )" = "$( stat -c '%u %g' "$JEKYLL_PROJECT_NAME/_site/index.html" )"
@@ -108,14 +101,12 @@ jobs:
           sleep 3
       - name: _site/dummy.txt exists
         run: test -f "$JEKYLL_PROJECT_NAME/_site/dummy.txt"
-      - name: Check _site/dummy.txt ownership
+      - name: Check _site/dummy.txt owned by current user
         run: test "$( id -u ) $( id -g )" = "$( stat -c '%u %g' "$JEKYLL_PROJECT_NAME/_site/dummy.txt" )"
       - name: Fetch dummy.txt
         run: curl -sS -D - http://localhost:4000/dummy.txt
       - name: Stop containers
-        run: |
-          cd src
-          make docker/down
+        run: make -f src/Makefile docker/down
   docker_root_build:
     name: Docker build (as root)
     runs-on: ubuntu-18.04
@@ -136,9 +127,7 @@ jobs:
       - name: Jekyll project is owned by root
         run: sudo chown -R -- root:root "$JEKYLL_PROJECT_NAME"
       - name: Build Docker images
-        run: |
-          cd src
-          sudo make docker/build "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
+        run: sudo make -f src/Makefile docker/build "PROJECT_DIR=$JEKYLL_PROJECT_NAME"
       - name: _site doesn't exist
         run: test ! -e "$JEKYLL_PROJECT_NAME/_site"
       - name: Start containers
@@ -147,7 +136,7 @@ jobs:
           sudo make docker/up "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
           sleep 3
           sudo make docker/logs
-      - name: Check container UID
+      - name: Check container running as container user
         run: |
           pid="$( docker inspect -f '{{.State.Pid}}' jekyll_project_1 )"
           info="$( ps --no-headers -o uid:1,gid:1 -p "$pid" )"
@@ -156,7 +145,7 @@ jobs:
         run: |
           test -d "$JEKYLL_PROJECT_NAME/_site"
           test -f "$JEKYLL_PROJECT_NAME/_site/index.html"
-      - name: Check _site ownership
+      - name: Check _site owned by container user
         run: |
           test '999 999' = "$( stat -c '%u %g' "$JEKYLL_PROJECT_NAME/_site" )"
           test '999 999' = "$( stat -c '%u %g' "$JEKYLL_PROJECT_NAME/_site/index.html" )"
@@ -170,11 +159,9 @@ jobs:
           sleep 3
       - name: _site/dummy.txt exists
         run: test -f "$JEKYLL_PROJECT_NAME/_site/dummy.txt"
-      - name: Check _site/dummy.txt ownership
+      - name: Check _site/dummy.txt owned by container user
         run: test '999 999' = "$( stat -c '%u %g' "$JEKYLL_PROJECT_NAME/_site/dummy.txt" )"
       - name: Fetch dummy.txt
         run: curl -sS -D - http://localhost:4000/dummy.txt
       - name: Stop containers
-        run: |
-          cd src
-          sudo make docker/down
+        run: sudo make -f src/Makefile docker/down
