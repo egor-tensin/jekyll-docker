@@ -20,13 +20,15 @@ services:
       context: .
       dockerfile: Dockerfile.base
       args:
-        JEKYLL_USER: developer
+        - JEKYLL_UID
+        - JEKYLL_GID
+    user: "$JEKYLL_UID:$JEKYLL_GID"
   project:
     build:
       context: "${PROJECT_DIR:-..}"
       # Dockerfile outside of the build context.
       # This is supposedly supported by Docker since 18.03, but I couldn't find
-      # a less hacky way to do it.
+      # a less hacky way to do it in docker-compose.
       # Source: https://github.com/docker/compose/issues/4926.
       dockerfile: "$PWD/Dockerfile.project"
     depends_on:
@@ -35,5 +37,6 @@ services:
       - base
     ports:
       - 4000:4000
+    user: "$JEKYLL_UID:$JEKYLL_GID"
     volumes:
       - "${PROJECT_DIR:-..}:/project"

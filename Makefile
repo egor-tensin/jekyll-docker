@@ -56,17 +56,21 @@ chruby/uninstall:
 chruby/clean:
 	rm -rf -- '$(chruby_archive)' '$(chruby_dir)'
 
-define chruby_profile_d
+define chruby_source
 if [ -n "$$BASH_VERSION" ] || [ -n "$$ZSH_VERSION" ]; then
     [ -r '$(chruby_sh)' ] && source '$(chruby_sh)'
     [ -r '$(auto_sh)'   ] && source '$(auto_sh)'
 fi
 endef
-export chruby_profile_d
+export chruby_source
+
+.PHONY: chruby/.bashrc
+chruby/.bashrc:
+	echo "$$chruby_source" >> ~/.bashrc
 
 .PHONY: chruby/profile.d
 chruby/profile.d:
-	echo "$$chruby_profile_d" > /etc/profile.d/chruby.sh
+	echo "$$chruby_source" > /etc/profile.d/chruby.sh
 
 .PHONY: chruby/profile.d/clean
 chruby/profile.d/clean:
@@ -97,11 +101,15 @@ deps/update: dependencies/update
 
 .PHONY: jekyll/build
 jekyll/build:
-	$(jekyll) build --config _config.yml,_config_dev.yml
+	$(jekyll) build --drafts --config _config.yml,_config_dev.yml
 
 .PHONY: jekyll/serve
 jekyll/serve:
-	$(jekyll) serve --host 0.0.0.0 --config _config.yml,_config_dev.yml
+	$(jekyll) serve --drafts --config _config.yml,_config_dev.yml --host 0.0.0.0
+
+JEKYLL_UID ?= $(shell id -u)
+JEKYLL_GID ?= $(shell id -g)
+export JEKYLL_UID JEKYLL_GID
 
 # Not an absolute path, cause you know, Windows (more specifically, Cygwin +
 # native Windows docker-compose).
@@ -109,11 +117,15 @@ docker_compose := cd -- '$(makefile_dir)' && docker-compose --env-file ./.env
 
 .PHONY: docker/build
 docker/build:
-	$(docker_compose) build --force-rm
+	$(docker_compose) build --force-rm --build-arg 'JEKYLL_UID=$(JEKYLL_UID)' --build-arg 'JEKYLL_GID=$(JEKYLL_GID)'
 
 .PHONY: docker/up
 docker/up:
 	$(docker_compose) up -d project
+
+.PHONY: docker/logs
+docker/logs:
+	$(docker_compose) logs
 
 .PHONY: docker/down
 docker/down:

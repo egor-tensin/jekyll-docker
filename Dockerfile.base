@@ -7,32 +7,58 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update -yq && \
     apt install -yq --no-install-recommends \
         build-essential \
-        ca-certificates wget \
+        ca-certificates gnupg wget \
         sudo \
         nano vim
 
-# Creating regular user 'developer':
-ARG JEKYLL_USER=developer
-ENV JEKYLL_USER="$JEKYLL_USER"
-RUN addgroup "$JEKYLL_USER" && \
-    adduser --disabled-password --gecos "" --ingroup "$JEKYLL_USER" --home "/home/$JEKYLL_USER" "$JEKYLL_USER" && \
-    addgroup "$JEKYLL_USER" sudo && \
+# Install gosu (better sudo, basically).
+ENV GOSU_VERSION 1.12
+RUN DPKG_ARCH="$( dpkg --print-architecture | awk -F- '{ print $NF }' )" && \
+    wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$DPKG_ARCH" && \
+    wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$DPKG_ARCH.asc" && \
+    export GNUPGHOME="$( mktemp -d )" && \
+    gpg --batch --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 && \
+    gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu && \
+    gpgconf --kill all && \
+    rm -rf "$GNUPGHOME" /usr/local/bin/gosu.asc && \
+    chmod +x /usr/local/bin/gosu && \
+    gosu nobody true
+
+ENV DEFAULT_UID=999
+ENV DEFAULT_GID="$DEFAULT_UID"
+
+ARG JEKYLL_UID
+ARG JEKYLL_GID
+RUN test -n "$JEKYLL_UID" && test -n "$JEKYLL_GID"
+ENV JEKYLL_UID="$JEKYLL_UID"
+ENV JEKYLL_GID="$JEKYLL_GID"
+
+RUN if [ "$JEKYLL_UID" = 0 ]; then JEKYLL_UID="$DEFAULT_UID"; fi && \
+    if [ "$JEKYLL_GID" = 0 ]; then JEKYLL_GID="$DEFAULT_GID"; fi && \
+    addgroup --gid "${JEKYLL_GID:-$DEFAULT_GID}" jekyll && \
+    adduser \
+        --disabled-password \
+        --gecos '' \
+        --home /home/jekyll \
+        --ingroup jekyll \
+        --uid "${JEKYLL_UID:-$DEFAULT_UID}" \
+        jekyll && \
+    addgroup jekyll sudo && \
     echo -e '%sudo ALL=(ALL) NOPASSWD:ALL\nDefaults env_keep += "HOME"' >> /etc/sudoers
 
-USER "$JEKYLL_USER"
-ENV PATH="/home/$JEKYLL_USER/.local/bin:$PATH"
+RUN mkdir /utils && chown jekyll /utils
+WORKDIR /utils
+COPY --chown=jekyll:jekyll ["Makefile", "./"]
 
-ENV MAKEFILE_DIR="/utils"
-RUN sudo mkdir -p -- "$MAKEFILE_DIR" && \
-    sudo chown -- "$JEKYLL_USER:$JEKYLL_USER" "$MAKEFILE_DIR"
-WORKDIR "$MAKEFILE_DIR"
+ENV PATH="/home/jekyll/.local/bin:$PATH"
 
-COPY --chown="$JEKYLL_USER:$JEKYLL_USER" ["Makefile", "./"]
+RUN gosu jekyll make ruby-install && \
+    gosu jekyll make ruby-install/clean && \
+    gosu jekyll make ruby && \
+    gosu jekyll make chruby && \
+    gosu jekyll make chruby/.bashrc && \
+    gosu jekyll make chruby/clean && \
+    gosu jekyll make bundler
 
-RUN make ruby-install && \
-    make ruby-install/clean && \
-    make ruby && \
-    make chruby && \
-    sudo make chruby/profile.d && \
-    make chruby/clean && \
-    make bundler
+COPY ["docker-entrypoint.sh", "/"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
