@@ -4,6 +4,10 @@ SHELL := bash
 .DELETE_ON_ERROR:
 .SUFFIXES:
 
+empty :=
+space := $(empty) $(empty)
+comma := ,
+
 makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # Jekyll project is in the parent directory by default.
@@ -78,8 +82,8 @@ chruby/profile.d/clean:
 
 chruby := . '$(chruby_sh)' && chruby 'ruby-$(RUBY_VERSION)'
 project_chruby := cd -- '$(PROJECT_DIR)' && $(chruby)
+
 bundle := $(project_chruby) && bundle
-jekyll := $(bundle) exec jekyll
 
 .PHONY: bundler
 bundler:
@@ -99,13 +103,24 @@ deps: dependencies
 .PHONY: deps/update
 deps/update: dependencies/update
 
+# List of --config files in alphabetical order.
+jekyll_configs := $(shell cd -- '$(PROJECT_DIR)' && find . -mindepth 1 -maxdepth 1 -type f -name '_config*.yml' -print | sort)
+jekyll_configs := $(subst $(space),$(comma),$(jekyll_configs))
+
+jekyll_opts := --drafts --config $(jekyll_configs)
+jekyll := $(bundle) exec jekyll
+
+.PHONY: foo
+foo:
+	echo $(configs)
+
 .PHONY: jekyll/build
 jekyll/build:
-	$(jekyll) build --drafts --config _config.yml,_config_dev.yml
+	$(jekyll) build $(jekyll_opts)
 
 .PHONY: jekyll/serve
 jekyll/serve:
-	$(jekyll) serve --drafts --config _config.yml,_config_dev.yml --host 0.0.0.0
+	$(jekyll) serve $(jekyll_opts) --host 0.0.0.0
 
 JEKYLL_UID ?= $(shell id -u)
 JEKYLL_GID ?= $(shell id -g)
