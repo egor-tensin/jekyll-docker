@@ -3,6 +3,10 @@ jekyll-docker
 
 ![This even works?](https://github.com/egor-tensin/jekyll-docker/workflows/This%20even%20works%3F/badge.svg)
 
+Develop your Jekyll project in a Docker container, without installing all the
+dependencies on the host.
+Or don't.
+
 | Feature                | Command
 | ---------------------- | ----------------------------------------------
 | Install [ruby-install] | `make ruby-install && make ruby-install/clean`
@@ -61,21 +65,6 @@ Examples
    Bring everything down:
 
        make docker/down
-    
-Notes
------
-
-This project was supposed to be included as a submodule in my Jekyll projects'
-repositories.
-I would then `cd` to Jekyll project's directory and run something like
-
-    make -f jekyll-docker/Makefile docker/up
-
-and I'd get a Docker container running Jekyll, without actually bothering to
-install everything locally.
-This goal was achieved, but I also noticed that "out-of-tree" builds were
-actually possible, hence the introduction of the PROJECT_DIR parameter, and the
-slight crazyness with the two separate images.
 
 License
 -------

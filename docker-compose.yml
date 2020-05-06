@@ -1,3 +1,5 @@
+# About the two images...
+#
 # I had conflicting requirements:
 # * make Makefile available during the build to avoid code duplication,
 # * make out-of-tree builds possible (i.e. this directory, along with Makefile,
