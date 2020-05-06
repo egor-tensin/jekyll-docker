@@ -1,0 +1,180 @@
+name: This even works?
+
+on: [push, pull_request]
+
+env:
+  JEKYLL_PROJECT_AUTHOR: egor-tensin
+  JEKYLL_PROJECT_NAME: egor-tensin.github.io
+
+jobs:
+  local_build:
+    name: Local build
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: src
+      - name: Checkout Jekyll project
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}
+          path: ${{ env.JEKYLL_PROJECT_NAME }}
+      - name: Add ~/.local/bin to PATH
+        run: echo "::add-path::$HOME/.local/bin"
+      - name: chruby/ruby-install are not installed
+        run: |
+          test '' = "$( type -t chruby-exec )"
+          test '' = "$( type -t ruby-install )"
+      - name: Install Ruby
+        run: |
+          cd src
+          make ruby-install
+          make ruby-install/clean
+          make ruby
+          make chruby
+          make chruby/clean
+      - name: chruby/ruby-install were installed
+        run: |
+          test 'file' = "$( type -t chruby-exec )"
+          test 'file' = "$( type -t ruby-install )"
+      - name: Install dependencies
+        run: |
+          cd src
+          make bundler
+          make dependencies "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
+      - name: _site doesn't exist
+        run: |
+          cd -- "$JEKYLL_PROJECT_NAME"
+          test ! -e '_site'
+      - name: Build Jekyll project
+        run: |
+          cd src
+          make jekyll/build "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
+      - name: _site exists
+        run: |
+          cd -- "$JEKYLL_PROJECT_NAME"
+          test -d '_site'
+          test -f '_site/index.html'
+  docker_build:
+    name: Docker build
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Running as regular user
+        run: test "$( id -u )" != 0
+      - name: Docker is accessible as regular user
+        run: docker ps
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: src
+      - name: Checkout Jekyll project
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}
+          path: ${{ env.JEKYLL_PROJECT_NAME }}
+      - name: Build Docker images
+        run: |
+          cd src
+          make docker/build "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
+      - name: _site doesn't exist
+        run: test ! -e "$JEKYLL_PROJECT_NAME/_site"
+      - name: Start containers
+        run: |
+          cd src
+          make docker/up "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
+          sleep 3
+          make docker/logs
+      - name: Check container UID
+        run: |
+          pid="$( docker inspect -f '{{.State.Pid}}' jekyll_project_1 )"
+          info="$( ps --no-headers -o uid:1,gid:1 -p "$pid" )"
+          test "$( id -u ) $( id -g )" = "$info"
+      - name: _site exists
+        run: |
+          test -d "$JEKYLL_PROJECT_NAME/_site"
+          test -f "$JEKYLL_PROJECT_NAME/_site/index.html"
+      - name: Check _site ownership
+        run: |
+          test "$( id -u ) $( id -g )" = "$( stat -c '%u %g' "$JEKYLL_PROJECT_NAME/_site" )"
+          test "$( id -u ) $( id -g )" = "$( stat -c '%u %g' "$JEKYLL_PROJECT_NAME/_site/index.html" )"
+      - name: Fetch index.html
+        run: curl -sS -D - http://localhost:4000/index.html
+      - name: _site/dummy.txt doesn't exist
+        run: test ! -e "$JEKYLL_PROJECT_NAME/_site/dummy.txt"
+      - name: create dummy.txt
+        run: |
+          echo 123 > "$JEKYLL_PROJECT_NAME/dummy.txt"
+          sleep 3
+      - name: _site/dummy.txt exists
+        run: test -f "$JEKYLL_PROJECT_NAME/_site/dummy.txt"
+      - name: Check _site/dummy.txt ownership
+        run: test "$( id -u ) $( id -g )" = "$( stat -c '%u %g' "$JEKYLL_PROJECT_NAME/_site/dummy.txt" )"
+      - name: Fetch dummy.txt
+        run: curl -sS -D - http://localhost:4000/dummy.txt
+      - name: Stop containers
+        run: |
+          cd src
+          make docker/down
+  docker_root_build:
+    name: Docker build (as root)
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Running as regular user
+        run: test "$( id -u )" != 0
+      - name: sudo makes root
+        run: test "$( sudo id -u )" = 0
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: src
+      - name: Checkout Jekyll project
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}
+          path: ${{ env.JEKYLL_PROJECT_NAME }}
+      - name: Jekyll project is owned by root
+        run: sudo chown -R -- root:root "$JEKYLL_PROJECT_NAME"
+      - name: Build Docker images
+        run: |
+          cd src
+          sudo make docker/build "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
+      - name: _site doesn't exist
+        run: test ! -e "$JEKYLL_PROJECT_NAME/_site"
+      - name: Start containers
+        run: |
+          cd src
+          sudo make docker/up "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
+          sleep 3
+          sudo make docker/logs
+      - name: Check container UID
+        run: |
+          pid="$( docker inspect -f '{{.State.Pid}}' jekyll_project_1 )"
+          info="$( ps --no-headers -o uid:1,gid:1 -p "$pid" )"
+          test '999 999' = "$info"
+      - name: _site exists
+        run: |
+          test -d "$JEKYLL_PROJECT_NAME/_site"
+          test -f "$JEKYLL_PROJECT_NAME/_site/index.html"
+      - name: Check _site ownership
+        run: |
+          test '999 999' = "$( stat -c '%u %g' "$JEKYLL_PROJECT_NAME/_site" )"
+          test '999 999' = "$( stat -c '%u %g' "$JEKYLL_PROJECT_NAME/_site/index.html" )"
+      - name: Fetch index.html
+        run: curl -sS -D - http://localhost:4000/index.html
+      - name: _site/dummy.txt doesn't exist
+        run: test ! -e "$JEKYLL_PROJECT_NAME/_site/dummy.txt"
+      - name: create dummy.txt
+        run: |
+          echo 123 | sudo tee "$JEKYLL_PROJECT_NAME/dummy.txt"
+          sleep 3
+      - name: _site/dummy.txt exists
+        run: test -f "$JEKYLL_PROJECT_NAME/_site/dummy.txt"
+      - name: Check _site/dummy.txt ownership
+        run: test '999 999' = "$( stat -c '%u %g' "$JEKYLL_PROJECT_NAME/_site/dummy.txt" )"
+      - name: Fetch dummy.txt
+        run: curl -sS -D - http://localhost:4000/dummy.txt
+      - name: Stop containers
+        run: |
+          cd src
+          sudo make docker/down

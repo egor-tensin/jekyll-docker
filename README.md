@@ -1,6 +1,8 @@
 jekyll-docker
 =============
 
+![This even works?](https://github.com/egor-tensin/jekyll-docker/workflows/This%20even%20works%3F/badge.svg)
+
 | Feature                | Command
 | ---------------------- | ----------------------------------------------
 | Install [ruby-install] | `make ruby-install && make ruby-install/clean`
