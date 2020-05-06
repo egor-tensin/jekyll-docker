@@ -37,34 +37,34 @@ Set parameter values by passing them to make, i.e.
 Examples
 --------
 
-1. Set up an environment and run Jekyll locally:
+### Jekyll in Docker
 
-       make ruby-install
-       make ruby-install/clean
-       make ruby
-       make chruby
-       make chruby/clean
-       make bundler
-       make dependencies PROJECT_DIR=../jekyll-project/
-       make jekyll/serve PROJECT_DIR=../jekyll-project/
+    make docker/up PROJECT_DIR=../jekyll-project/
 
-   Some of these might not work on the first try (you'd need to install some
-   native dependencies for your gems, use `sudo`, etc.).
+This builds two images: `jekyll_base` and `jekyll_project`, and runs a
+container, which mounts PROJECT_DIR, and runs Jekyll there.
 
-2. Run Jekyll in Docker:
+To rebuild the images (i.e. when you bump dependencies), run
 
-       make docker/up PROJECT_DIR=../jekyll-project/
+    make docker/build PROJECT_DIR=../jekyll-project/
 
-   This builds two images: `jekyll_base` and `jekyll_project`, and runs a
-   container, which binds PROJECT_DIR, and runs Jekyll there.
+Bring everything down:
 
-   To rebuild the images (i.e. when you bump dependencies), run
+    make docker/down
 
-       make docker/build PROJECT_DIR=../jekyll-project/
+### Jekyll on the host
 
-   Bring everything down:
+    make ruby-install
+    make ruby-install/clean
+    make ruby
+    make chruby
+    make chruby/clean
+    make bundler
+    make dependencies PROJECT_DIR=../jekyll-project/
+    make jekyll/serve PROJECT_DIR=../jekyll-project/
 
-       make docker/down
+Some of these might not work on the first try (you'd need to install some
+native dependencies for your gems, use `sudo`, etc.).
 
 License
 -------
