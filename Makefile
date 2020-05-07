@@ -126,7 +126,7 @@ JEKYLL_UID ?= $(shell id -u)
 JEKYLL_GID ?= $(shell id -g)
 export JEKYLL_UID JEKYLL_GID
 
-docker_compose := cd -- '$(makefile_dir)' && PROJECT_DIR='$(abspath $(PROJECT_DIR))' docker-compose --env-file ./.env
+docker_compose := cd -- '$(makefile_dir)' && PROJECT_DIR='$(abspath $(PROJECT_DIR))' docker-compose
 
 .PHONY: docker/build
 docker/build:
