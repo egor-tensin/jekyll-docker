@@ -8,6 +8,8 @@ empty :=
 space := $(empty) $(empty)
 comma := ,
 
+escape = $(subst ','\'',$(1))
+
 makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # Jekyll project is in the parent directory by default.
@@ -30,40 +32,40 @@ auto_sh := $(PREFIX)/share/chruby/auto.sh
 
 .PHONY: ruby-install
 ruby-install:
-	wget -O '$(ruby_install_archive)' '$(ruby_install_url)'
-	tar -xzvf '$(ruby_install_archive)' -C '$(makefile_dir)'
-	cd -- '$(ruby_install_dir)' && make install 'PREFIX=$(PREFIX)'
+	wget -O '$(call escape,$(ruby_install_archive))' '$(call escape,$(ruby_install_url))'
+	tar -xzvf '$(call escape,$(ruby_install_archive))' -C '$(call escape,$(makefile_dir))'
+	cd -- '$(call escape,$(ruby_install_dir))' && make install 'PREFIX=$(call escape,$(PREFIX))'
 
 .PHONY: ruby-install/uninstall
 ruby-install/uninstall:
-	cd -- '$(ruby_install_dir)' && make uninstall 'PREFIX=$(PREFIX)'
+	cd -- '$(call escape,$(ruby_install_dir))' && make uninstall 'PREFIX=$(call escape,$(PREFIX))'
 
 .PHONY: ruby-install/clean
 ruby-install/clean:
-	rm -rf -- '$(ruby_install_archive)' '$(ruby_install_dir)'
+	rm -rf -- '$(call escape,$(ruby_install_archive))' '$(call escape,$(ruby_install_dir))'
 
 .PHONY: ruby
 ruby:
-	ruby-install -j2 --cleanup ruby '$(RUBY_VERSION)'
+	ruby-install -j2 --cleanup ruby '$(call escape,$(RUBY_VERSION))'
 
 .PHONY: chruby
 chruby:
-	wget -O '$(chruby_archive)' '$(chruby_url)'
-	tar -xzvf '$(chruby_archive)' -C '$(makefile_dir)'
-	cd -- '$(chruby_dir)' && $(MAKE) install 'PREFIX=$(PREFIX)'
+	wget -O '$(call escape,$(chruby_archive))' '$(call escape,$(chruby_url))'
+	tar -xzvf '$(call escape,$(chruby_archive))' -C '$(call escape,$(makefile_dir))'
+	cd -- '$(call escape,$(chruby_dir))' && $(MAKE) install 'PREFIX=$(call escape,$(PREFIX))'
 
 .PHONY: chruby/uninstall
 chruby/uninstall:
-	cd -- '$(chruby_dir)' && $(MAKE) uninstall 'PREFIX=$(PREFIX)'
+	cd -- '$(call escape,$(chruby_dir))' && $(MAKE) uninstall 'PREFIX=$(call escape,$(PREFIX))'
 
 .PHONY: chruby/clean
 chruby/clean:
-	rm -rf -- '$(chruby_archive)' '$(chruby_dir)'
+	rm -rf -- '$(call escape,$(chruby_archive))' '$(call escape,$(chruby_dir))'
 
 define chruby_source
 if [ -n "$$BASH_VERSION" ] || [ -n "$$ZSH_VERSION" ]; then
-    [ -r '$(chruby_sh)' ] && source '$(chruby_sh)'
-    [ -r '$(auto_sh)'   ] && source '$(auto_sh)'
+    [ -r '$(call escape,$(chruby_sh))' ] && source '$(call escape,$(chruby_sh))'
+    [ -r '$(call escape,$(auto_sh))'   ] && source '$(call escape,$(auto_sh))'
 fi
 endef
 export chruby_source
@@ -80,8 +82,8 @@ chruby/profile.d:
 chruby/profile.d/clean:
 	rm -f -- /etc/profile.d/chruby.sh
 
-chruby := . '$(chruby_sh)' && chruby 'ruby-$(RUBY_VERSION)'
-project_chruby := cd -- '$(PROJECT_DIR)' && $(chruby)
+chruby := . '$(call escape,$(chruby_sh))' && chruby 'ruby-$(call escape,$(RUBY_VERSION))'
+project_chruby := cd -- '$(call escape,$(PROJECT_DIR))' && $(chruby)
 
 bundle := $(project_chruby) && bundle
 
@@ -104,15 +106,11 @@ deps: dependencies
 deps/update: dependencies/update
 
 # List of --config files in alphabetical order.
-jekyll_configs := $(shell cd -- '$(PROJECT_DIR)' && find . -mindepth 1 -maxdepth 1 -type f -name '_config*.yml' -print | sort)
+jekyll_configs := $(shell cd -- '$(call escape,$(PROJECT_DIR))' && find . -mindepth 1 -maxdepth 1 -type f -name '_config*.yml' -print | sort)
 jekyll_configs := $(subst $(space),$(comma),$(jekyll_configs))
 
-jekyll_opts := --drafts --config $(jekyll_configs)
+jekyll_opts := --drafts --config '$(call escape,$(jekyll_configs))'
 jekyll := $(bundle) exec jekyll
-
-.PHONY: foo
-foo:
-	echo $(configs)
 
 .PHONY: jekyll/build
 jekyll/build:
@@ -126,11 +124,11 @@ JEKYLL_UID ?= $(shell id -u)
 JEKYLL_GID ?= $(shell id -g)
 export JEKYLL_UID JEKYLL_GID
 
-docker_compose := cd -- '$(makefile_dir)' && PROJECT_DIR='$(abspath $(PROJECT_DIR))' docker-compose
+docker_compose := cd -- '$(call escape,$(makefile_dir))' && PROJECT_DIR='$(call escape,$(abspath $(PROJECT_DIR)))' docker-compose
 
 .PHONY: docker/build
 docker/build:
-	$(docker_compose) build --force-rm --build-arg 'JEKYLL_UID=$(JEKYLL_UID)' --build-arg 'JEKYLL_GID=$(JEKYLL_GID)'
+	$(docker_compose) build --force-rm --build-arg 'JEKYLL_UID=$(call escape,$(JEKYLL_UID))' --build-arg 'JEKYLL_GID=$(call escape,$(JEKYLL_GID))'
 
 .PHONY: docker/up
 docker/up:
