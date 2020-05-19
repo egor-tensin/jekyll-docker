@@ -22,7 +22,7 @@ jobs:
           path: ${{ env.JEKYLL_PROJECT_NAME }}
       - name: Add ~/.local/bin to PATH
         run: echo "::add-path::$HOME/.local/bin"
-      - name: chruby/ruby-install are not installed
+      - name: chruby & ruby-install are not installed
         run: |
           test '' = "$( type -t chruby-exec )"
           test '' = "$( type -t ruby-install )"
@@ -34,7 +34,7 @@ jobs:
           make ruby
           make chruby
           make chruby/clean
-      - name: chruby/ruby-install were installed
+      - name: chruby & ruby-install were installed
         run: |
           test 'file' = "$( type -t chruby-exec )"
           test 'file' = "$( type -t ruby-install )"
@@ -136,7 +136,7 @@ jobs:
           sudo make docker/up "PROJECT_DIR=../$JEKYLL_PROJECT_NAME"
           sleep 3
           sudo make docker/logs
-      - name: Check container running as container user
+      - name: Check Jekyll running as container user
         run: |
           pid="$( docker inspect -f '{{.State.Pid}}' jekyll_project_1 )"
           info="$( ps --no-headers -o uid:1,gid:1 -p "$pid" )"
