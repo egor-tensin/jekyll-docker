@@ -27,7 +27,7 @@ jobs:
           repository: ${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}
           path: ${{ env.JEKYLL_PROJECT_NAME }}
       - name: Add ~/.local/bin to PATH
-        run: echo "::add-path::$HOME/.local/bin"
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: chruby & ruby-install are not installed
         run: |
           test '' = "$( type -t chruby-exec )"
