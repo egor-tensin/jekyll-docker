@@ -1,14 +1,32 @@
-SHELL := bash
-.SHELLFLAGS := -e -o pipefail -c
-.DEFAULT_GOAL := jekyll/serve
+MAKEFLAGS := --no-builtin-rules --no-builtin-variables --warn-undefined-variables
+unexport MAKEFLAGS
+.DEFAULT_GOAL := all
 .DELETE_ON_ERROR:
 .SUFFIXES:
+SHELL := bash
+# Careful, -eu doesn't work with chruby, I think.
+.SHELLFLAGS := -e -o pipefail -c
+
+.PHONY: DO
+DO:
+
+escape = $(subst ','\'',$(1))
+
+define noexpand
+ifeq ($$(origin $(1)),environment)
+    $(1) := $$(value $(1))
+endif
+ifeq ($$(origin $(1)),environment override)
+    $(1) := $$(value $(1))
+endif
+ifeq ($$(origin $(1)),command line)
+    override $(1) := $$(value $(1))
+endif
+endef
 
 empty :=
 space := $(empty) $(empty)
 comma := ,
-
-escape = $(subst ','\'',$(1))
 
 makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
@@ -18,6 +36,12 @@ RUBY_INSTALL_VERSION ?= 0.7.0
 RUBY_VERSION ?= 2.6.5
 CHRUBY_VERSION ?= 0.3.9
 PREFIX ?= $(HOME)/.local
+
+$(eval $(call noexpand,PROJECT_DIR))
+$(eval $(call noexpand,RUBY_INSTALL_VERSION))
+$(eval $(call noexpand,RUBY_VERSION))
+$(eval $(call noexpand,CHRUBY_VERSION))
+$(eval $(call noexpand,PREFIX))
 
 ruby_install_url := https://github.com/postmodern/ruby-install/archive/v$(RUBY_INSTALL_VERSION).tar.gz
 ruby_install_archive := $(makefile_dir)/ruby-install-$(RUBY_INSTALL_VERSION).tar.gz
@@ -29,6 +53,9 @@ chruby_dir := $(makefile_dir)/chruby-$(CHRUBY_VERSION)
 
 chruby_sh := $(PREFIX)/share/chruby/chruby.sh
 auto_sh := $(PREFIX)/share/chruby/auto.sh
+
+.PHONY: all
+all: jekyll/serve
 
 .PHONY: ruby-install
 ruby-install:
@@ -122,6 +149,8 @@ jekyll/serve:
 
 JEKYLL_UID ?= $(shell id -u)
 JEKYLL_GID ?= $(shell id -g)
+$(eval $(call noexpand,JEKYLL_UID))
+$(eval $(call noexpand,JEKYLL_GID))
 export JEKYLL_UID JEKYLL_GID
 
 docker_compose := cd -- '$(call escape,$(makefile_dir))' && PROJECT_DIR='$(call escape,$(abspath $(PROJECT_DIR)))' docker-compose
