@@ -14,7 +14,7 @@ env:
 
 jobs:
   local_build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     name: Local build
     steps:
       - name: Checkout
@@ -58,7 +58,7 @@ jobs:
           test -d "$JEKYLL_PROJECT_NAME/_site"
           test -f "$JEKYLL_PROJECT_NAME/_site/index.html"
   docker_build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     name: Docker build
     steps:
       - name: Running as regular user
@@ -114,7 +114,7 @@ jobs:
       - name: Stop containers
         run: make -f src/Makefile docker/down
   docker_root_build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     name: Docker build (as root)
     steps:
       - name: Running as regular user
