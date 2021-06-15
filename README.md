@@ -1,7 +1,7 @@
 jekyll-docker
 =============
 
-[![This even works?](https://github.com/egor-tensin/jekyll-docker/actions/workflows/test.yml/badge.svg)](https://github.com/egor-tensin/jekyll-docker/actions/workflows/test.yml)
+[![CI](https://github.com/egor-tensin/jekyll-docker/actions/workflows/ci.yml/badge.svg)](https://github.com/egor-tensin/jekyll-docker/actions/workflows/ci.yml)
 
 Develop your Jekyll project in a Docker container, without installing all the
 dependencies on the host.
