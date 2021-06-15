@@ -1,4 +1,4 @@
-name: This even works?
+name: CI
 
 on:
   push:
