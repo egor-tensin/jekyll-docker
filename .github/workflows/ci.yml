@@ -24,8 +24,8 @@ jobs:
       - name: Checkout Jekyll project
         uses: actions/checkout@v2
         with:
-          repository: ${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}
-          path: ${{ env.JEKYLL_PROJECT_NAME }}
+          repository: '${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}'
+          path: '${{ env.JEKYLL_PROJECT_NAME }}'
       - name: Add ~/.local/bin to PATH
         run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: chruby & ruby-install are not installed
@@ -57,6 +57,7 @@ jobs:
         run: |
           test -d "$JEKYLL_PROJECT_NAME/_site"
           test -f "$JEKYLL_PROJECT_NAME/_site/index.html"
+
   docker_build:
     runs-on: ubuntu-latest
     name: Docker build
@@ -72,8 +73,8 @@ jobs:
       - name: Checkout Jekyll project
         uses: actions/checkout@v2
         with:
-          repository: ${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}
-          path: ${{ env.JEKYLL_PROJECT_NAME }}
+          repository: '${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}'
+          path: '${{ env.JEKYLL_PROJECT_NAME }}'
       - name: Build Docker images
         run: make -f src/Makefile docker/build "PROJECT_DIR=$JEKYLL_PROJECT_NAME"
       - name: _site doesn't exist
@@ -113,6 +114,7 @@ jobs:
         run: curl -sS -D - http://localhost:4000/dummy.txt
       - name: Stop containers
         run: make -f src/Makefile docker/down
+
   docker_root_build:
     runs-on: ubuntu-latest
     name: Docker build (as root)
@@ -128,8 +130,8 @@ jobs:
       - name: Checkout Jekyll project
         uses: actions/checkout@v2
         with:
-          repository: ${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}
-          path: ${{ env.JEKYLL_PROJECT_NAME }}
+          repository: '${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}'
+          path: '${{ env.JEKYLL_PROJECT_NAME }}'
       - name: Jekyll project is owned by root
         run: sudo chown -R -- root:root "$JEKYLL_PROJECT_NAME"
       - name: Build Docker images
