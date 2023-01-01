@@ -18,11 +18,11 @@ jobs:
     name: Local build
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: src
       - name: Checkout Jekyll project
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: '${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}'
           path: '${{ env.JEKYLL_PROJECT_NAME }}'
@@ -67,11 +67,11 @@ jobs:
       - name: Docker is accessible as regular user
         run: docker ps
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: src
       - name: Checkout Jekyll project
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: '${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}'
           path: '${{ env.JEKYLL_PROJECT_NAME }}'
@@ -124,11 +124,11 @@ jobs:
       - name: sudo makes root
         run: test "$( sudo id -u )" = 0
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: src
       - name: Checkout Jekyll project
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: '${{ env.JEKYLL_PROJECT_AUTHOR }}/${{ env.JEKYLL_PROJECT_NAME }}'
           path: '${{ env.JEKYLL_PROJECT_NAME }}'
