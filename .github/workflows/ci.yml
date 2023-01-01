@@ -13,6 +13,8 @@ jobs:
   local_build:
     runs-on: ubuntu-latest
     name: Local build
+    env:
+      JEKYLL_GITHUB_TOKEN: '${{ secrets.GH_TOKEN }}'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
