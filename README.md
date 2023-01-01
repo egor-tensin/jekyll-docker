@@ -25,8 +25,8 @@ Or don't.
 | Parameter            | Default   | Description
 | -------------------- | --------- | --------------------------------------------------
 | PROJECT_DIR          | ..        | Jekyll project directory
-| RUBY_INSTALL_VERSION | 0.7.0     | ruby-install version
-| RUBY_VERSION         | 2.6.5     | Ruby version
+| RUBY_INSTALL_VERSION | 0.8.5     | ruby-install version
+| RUBY_VERSION         | 3.1.2     | Ruby version
 | CHRUBY_VERSION       | 0.3.9     | chruby version
 | PREFIX               | ~/.local/ | Installation directory for ruby-install and chruby
 

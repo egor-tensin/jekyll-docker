@@ -32,8 +32,8 @@ makefile_dir := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # Jekyll project is in the parent directory by default.
 PROJECT_DIR ?= $(abspath $(dir $(makefile_dir))/..)
-RUBY_INSTALL_VERSION ?= 0.7.0
-RUBY_VERSION ?= 2.6.5
+RUBY_INSTALL_VERSION ?= 0.8.5
+RUBY_VERSION ?= 3.1.2
 CHRUBY_VERSION ?= 0.3.9
 PREFIX ?= $(HOME)/.local
 
