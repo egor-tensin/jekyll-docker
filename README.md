@@ -3,6 +3,11 @@ jekyll-docker
 
 [![CI](https://github.com/egor-tensin/jekyll-docker/actions/workflows/ci.yml/badge.svg)](https://github.com/egor-tensin/jekyll-docker/actions/workflows/ci.yml)
 
+**Archiving this because I no longer think this approach is valid.
+Just using rbenv and installing dependencies there seems like a much saner option.**
+
+----
+
 Develop your Jekyll project in a Docker container, without installing all the
 dependencies on the host.
 Or don't.
